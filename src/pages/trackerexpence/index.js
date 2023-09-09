@@ -1,12 +1,17 @@
 import React from 'react';
-import { Button, Table, Form, Input } from 'antd';
-import { useState, useEffect } from 'react';
+import { Button, Table, Form, Input , Space  } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
+
+ import { useState, useEffect } from 'react';
+
 
 
 
 
 
 export default function Tracker() {
+    const [form] = Form.useForm();
+    const { Column } = Table;
     const [transactions, setTransactions] = useState([])
     const [type, setType] = useState(undefined)
     const [totals, setTotals] = useState({
@@ -14,19 +19,58 @@ export default function Tracker() {
         expense: 0,
         profitLoss: 0
     })
+    const [isEdit, setIsEdit] = useState(null)
    
+    // const onFinish = (values) => {
+    //     console.log('Success:', values);
+
+    //     const valueObj = {
+    //         ...values,
+    //         type,
+    //         created_at: new Date().toLocaleString()
+    //     }
+    //     console.log('Success:', valueObj);
+    //     setTransactions([valueObj, ...transactions])
+
+    // };
+    
     const onFinish = (values) => {
-        console.log('Success:', values);
+        if (isEdit !== null) {
 
-        const valueObj = {
-            ...values,
-            type,
-            created_at: new Date().toLocaleString()
+            transactions[isEdit] = {
+                ...values,
+                type,
+                created_at: new Date().toLocaleString()
+            }
+            setTransactions([...transactions])
+            setIsEdit(null)
+        } else {
+            const valueObj = {
+                ...values,
+                type,
+                created_at: new Date().toLocaleString()
+            }
+            console.log(valueObj)
+            setTransactions([valueObj, ...transactions])
         }
-        console.log('Success:', valueObj);
-        setTransactions([valueObj, ...transactions])
-
+        form.resetFields()
+        setType(undefined)
     };
+
+
+    const edit = (record, ind) => {
+        setIsEdit(ind)
+        form.setFieldsValue({
+            Amount: record.Amount,
+            desc: record.desc
+        })
+        setType(record.type)
+    }
+   
+    const deleteTransaction = (ind)=>{
+        transactions.splice(ind , 1)
+        setTransactions([...transactions])
+    }
     useEffect(() => {
         if (transactions.length) {
             let income = 0
@@ -47,28 +91,7 @@ export default function Tracker() {
 
 
 
-    const columns = [
-        {
-            title: 'Date',
-            dataIndex: 'created_at',
-            key: 'created_at',
-        },
-        {
-            title: 'Amount',
-            dataIndex: 'Amount',
-            key: 'amount',
-        },
-        {
-            title: 'Description',
-            dataIndex: 'desc',
-            key: 'desc',
-        },
-        {
-            title: 'Type',
-            dataIndex: 'type',
-            key: 'type',
-        },
-    ];
+  
 
 
     return (
@@ -117,7 +140,7 @@ export default function Tracker() {
                         remember: true,
                     }}
                     onFinish={onFinish}
-                   
+                    form={form}
                     autoComplete="off"
                 >
                     <Form.Item
@@ -154,7 +177,9 @@ export default function Tracker() {
                         }}
                     >
                         <Button htmlType="submit">
-                            Submit
+                           {
+                            isEdit !== null ? "Edit" : "Submit"
+                           }
                         </Button>
                     </Form.Item>
 
@@ -176,7 +201,28 @@ export default function Tracker() {
                     </div>
 
                 </div>
-                <Table dataSource={transactions} columns={columns} style={{ width: "700px" }} />;
+                <Table style={{ width: "700px" }} dataSource={transactions}  >
+                <Column dataIndex={'created_at'} key={'created_at'} title='Date' />
+                <Column dataIndex={'Amount'} key={'amount'} title='Amount' />
+                <Column dataIndex={'desc'} key={'desc'} title='Description' />
+                <Column dataIndex={'type'} key={'type'} title='Type' />
+                <Column
+                    title="Action"
+                    key="action"
+                    render={(_, record, ind) => {
+                        return (
+                            <Space size="middle">
+                                <a onClick={() => edit(record, ind)}><EditOutlined /></a>
+                                <a onClick={() => deleteTransaction(ind)}><DeleteOutlined /></a>
+                            </Space>
+                        )
+                    }}
+                />
+            </Table>
+            
+             
+       
+
             </div>
         </main>
 
